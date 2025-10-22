@@ -28,8 +28,6 @@ export default function AdminPanel() {
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showLogin, setShowLogin] = useState(true);
-  const [showRegister, setShowRegister] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     fullName: ''
@@ -37,15 +35,13 @@ export default function AdminPanel() {
 
   const API_BASE_URL = 'https://api.grow100x.ai/api/v1';
 
-  // Add useEffect to check for persisted login state
+  // Check for persisted user on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('adminUser');
     if (savedUser) {
       try {
         const userData = JSON.parse(savedUser);
         setUser(userData);
-        setShowLogin(false);
-        setShowRegister(false);
         fetchReferralData(userData.id);
       } catch (error) {
         localStorage.removeItem('adminUser');
@@ -53,49 +49,27 @@ export default function AdminPanel() {
     }
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/admin/login`, {
-        email: formData.email
+      // Register or get user with just email and name
+      const response = await axios.post(`${API_BASE_URL}/auth/admin/register`, {
+        email: formData.email,
+        fullName: formData.fullName
       });
 
       if (response.data.success) {
-        setUser(response.data.user);
-        localStorage.setItem('adminUser', JSON.stringify(response.data.user));
-        setShowLogin(false);
-        setShowRegister(false);
-        // Fetch referral data after login
-        await fetchReferralData(response.data.user.id);
+        const userData = response.data.user;
+        setUser(userData);
+        localStorage.setItem('adminUser', JSON.stringify(userData));
+        // Fetch referral data immediately
+        await fetchReferralData(userData.id);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await axios.post(`${API_BASE_URL}/auth/admin/register`, formData);
-
-      if (response.data.success) {
-        setUser(response.data.user);
-        localStorage.setItem('adminUser', JSON.stringify(response.data.user));
-        setShowLogin(false);
-        setShowRegister(false);
-        // Fetch referral data after registration
-        await fetchReferralData(response.data.user.id);
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || 'Failed to access dashboard');
     } finally {
       setLoading(false);
     }
@@ -148,26 +122,24 @@ export default function AdminPanel() {
   const handleLogout = () => {
     setUser(null);
     setReferralData(null);
-    setShowLogin(true);
-    setShowRegister(false);
     setFormData({ email: '', fullName: '' });
     localStorage.removeItem('adminUser');
   };
 
-  if (showLogin || showRegister) {
+  if (!user) {
     return (
       <div className="container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="card" style={{ width: '100%', maxWidth: '400px' }}>
           <div className="text-center mb-4">
             <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem', color: '#333' }}>
-              Grow100x Admin
+              Grow100x Referral
             </h1>
             <p style={{ color: '#666' }}>
-              {showLogin ? 'Login to your admin panel' : 'Create your admin account'}
+              Enter your details to access your referral dashboard
             </p>
           </div>
 
-          <form onSubmit={showLogin ? handleLogin : handleRegister}>
+          <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label className="form-label">Email Address</label>
               <input
@@ -180,19 +152,17 @@ export default function AdminPanel() {
               />
             </div>
 
-            {showRegister && (
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  required
-                  placeholder="Enter your full name"
-                />
-              </div>
-            )}
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input
+                type="text"
+                className="form-input"
+                value={formData.fullName}
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                required
+                placeholder="Enter your full name"
+              />
+            </div>
 
             {error && (
               <div className="text-danger mb-4" style={{ textAlign: 'center' }}>
@@ -206,45 +176,9 @@ export default function AdminPanel() {
               style={{ width: '100%', marginBottom: '1rem' }}
               disabled={loading}
             >
-              {loading ? 'Processing...' : (showLogin ? 'Login' : 'Register')}
+              {loading ? 'Loading...' : 'Access Dashboard'}
             </button>
           </form>
-
-          <div className="text-center">
-            {showLogin ? (
-              <p>
-                Don't have an account?{' '}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setShowRegister(true);
-                    setShowLogin(false);
-                    setError('');
-                  }}
-                  style={{ background: 'none', border: 'none', color: '#667eea', cursor: 'pointer', textDecoration: 'underline' }}
-                >
-                  Register here
-                </button>
-              </p>
-            ) : (
-              <p>
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setShowLogin(true);
-                    setShowRegister(false);
-                    setError('');
-                  }}
-                  style={{ background: 'none', border: 'none', color: '#667eea', cursor: 'pointer', textDecoration: 'underline' }}
-                >
-                  Login here
-                </button>
-              </p>
-            )}
-          </div>
         </div>
       </div>
     );
