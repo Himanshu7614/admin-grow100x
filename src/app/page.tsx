@@ -35,7 +35,7 @@ export default function AdminPanel() {
     fullName: ''
   });
 
-  const API_BASE_URL = 'http://localhost:3000/api/v1';
+  const API_BASE_URL = 'https://api.grow100x.com/api/v1';
 
   // Add useEffect to check for persisted login state
   useEffect(() => {
