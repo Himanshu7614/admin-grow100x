@@ -35,7 +35,6 @@ export default function AdminPanel() {
 
   const API_BASE_URL = 'https://api.grow100x.ai/api/v1';
 
-  // Check for persisted user on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('adminUser');
     if (savedUser) {
@@ -115,7 +114,6 @@ export default function AdminPanel() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // You can add a toast notification here
     alert('Copied to clipboard!');
   };
 
@@ -224,7 +222,7 @@ export default function AdminPanel() {
                 padding: '8px 12px',
                 borderRadius: '6px',
                 fontFamily: 'monospace',
-                fontSize: '1.1rem',
+                fontSize: '0.8rem',
                 flex: 1
               }}>
                 {referralData?.referralCode || 'Loading...'}
@@ -232,6 +230,24 @@ export default function AdminPanel() {
               <button
                 className="copy-btn"
                 onClick={() => copyToClipboard(referralData?.referralCode || '')}
+              >
+                Copy
+              </button>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+              <code style={{
+                background: '#e9ecef',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                fontFamily: 'monospace',
+                fontSize: '0.8rem',
+                flex: 1
+              }}>
+                https://grow100x.ai/analyst?reffer={referralData?.referralCode || 'Loading...'}
+              </code>
+              <button
+                className="copy-btn"
+                onClick={() => copyToClipboard(`https://grow100x.ai/analyst?reffer=${referralData?.referralCode || ''}`)}
               >
                 Copy
               </button>
@@ -246,36 +262,6 @@ export default function AdminPanel() {
             </button>
           </div>
         </div>
-
-        {referralData?.referralLinks && referralData.referralLinks.length > 0 && (
-          <div className="card">
-            <h3 style={{ marginBottom: '1rem', color: '#333' }}>Your Referral Links</h3>
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              {referralData.referralLinks.map((link, index) => (
-                <div key={index} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '1rem',
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid #dee2e6'
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <strong>{link.courseName}</strong>
-                    <br />
-                    <code style={{ color: '#666', fontSize: '0.9rem' }}>{link.link}</code>
-                  </div>
-                  <button
-                    className="copy-btn"
-                    onClick={() => copyToClipboard(link.link)}
-                  >
-                    Copy Link
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
